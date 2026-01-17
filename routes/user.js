@@ -1,5 +1,5 @@
 const express=require("express");
-const Router=express.Router();
+const router=express.Router();
 const User=require("../models/User");
 const protect=require("../middleware/auth");
 const jwt=require("jsonwebtoken");
@@ -35,3 +35,32 @@ router.post('/register',async (req,res)=>{
     }
 });
 
+
+//login user
+router.post('/login',async (req,res)=>{
+    const {email,password}=req.body;
+
+    try {
+        if(!email || !password){
+            res.status(400).json({message:"Please enter all fields"});
+        }
+
+        const user=await User.findOne({email});
+        const token=generateToken(user._id);
+
+        if(!user || !await user.matchPassword(password)){
+            res.status(401).json({message:"Invalid credentials"});
+        }
+
+        res.status(200).json({
+            userID:user._id,
+            username:user.username,
+            email:user.email,
+            token
+        })
+    } catch (error) {
+        res.status(500).json({message:"Server error"});
+    }
+})
+
+module.exports=router;
